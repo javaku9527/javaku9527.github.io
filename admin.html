@@ -19,6 +19,12 @@
   </header>
 
   <main>
+
+    <section class="admin-section">
+      <h2>GitHub Token</h2>
+      <div id="pat-status"></div>
+    </section>
+
     <section class="admin-section">
       <h2>新增場次</h2>
       <form id="add-form">
@@ -27,14 +33,18 @@
           <input type="date" id="date-input" required>
         </div>
         <div id="match-fields"></div>
-        <button type="submit" class="btn-primary">新增場次</button>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="submit-btn">新增場次</button>
+          <span id="form-msg" class="form-msg"></span>
+        </div>
       </form>
     </section>
 
     <section class="sessions-section">
       <h2>已紀錄場次</h2>
-      <div id="admin-list"></div>
+      <div id="admin-list"><p class="empty">載入中...</p></div>
     </section>
+
   </main>
 
   <footer>
@@ -43,12 +53,90 @@
 
   <script src="data.js"></script>
   <script>
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date-input').value = today;
+    const GITHUB_API = 'https://api.github.com/repos/javaku9527/javaku9527.github.io/contents/data.json';
 
-    // Generate match type selects from data.js
-    const matchFields = document.getElementById('match-fields');
+    function fromBase64(b64) {
+      const binary = atob(b64.replace(/\s/g, ''));
+      const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    }
+
+    function toBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      bytes.forEach(b => binary += String.fromCharCode(b));
+      return btoa(binary);
+    }
+
+    function getPAT() { return localStorage.getItem('smash_pat') || ''; }
+
+    function renderPATStatus() {
+      const pat = getPAT();
+      const el = document.getElementById('pat-status');
+      if (pat) {
+        el.innerHTML = `
+          <div class="pat-set">
+            <span>✓ Token 已設定</span>
+            <button class="btn-sm" onclick="clearPAT()">清除</button>
+          </div>
+        `;
+      } else {
+        el.innerHTML = `
+          <p class="pat-hint">
+            需要 GitHub Token 才能新增或刪除紀錄。<br>
+            去 GitHub → Settings → Developer settings → Personal access tokens (classic)
+            → 建立一個有 <code>public_repo</code> 權限的 token
+          </p>
+          <div class="form-group">
+            <label>Token</label>
+            <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxx">
+            <button class="btn-sm btn-save" onclick="savePAT()">儲存</button>
+          </div>
+        `;
+      }
+    }
+
+    function savePAT() {
+      const val = (document.getElementById('pat-input').value || '').trim();
+      if (!val) return;
+      localStorage.setItem('smash_pat', val);
+      renderPATStatus();
+    }
+
+    function clearPAT() {
+      localStorage.removeItem('smash_pat');
+      renderPATStatus();
+    }
+
+    async function readFile() {
+      const headers = {};
+      const pat = getPAT();
+      if (pat) headers['Authorization'] = `token ${pat}`;
+      const res = await fetch(GITHUB_API, { headers });
+      if (!res.ok) throw new Error(`讀取失敗 (${res.status})`);
+      const file = await res.json();
+      return { sha: file.sha, data: JSON.parse(fromBase64(file.content)) };
+    }
+
+    async function writeFile(data, sha) {
+      const pat = getPAT();
+      if (!pat) throw new Error('請先設定 GitHub Token');
+      const res = await fetch(GITHUB_API, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${pat}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'update: match record',
+          content: toBase64(JSON.stringify(data, null, 2)),
+          sha
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || '寫入失敗');
+      }
+    }
+
+    // Generate match type selects
     Object.entries(MATCH_TYPES).forEach(([key, label]) => {
       const div = document.createElement('div');
       div.className = 'form-group';
@@ -56,84 +144,103 @@
         <label>${label}冠軍</label>
         <select id="sel-${key}">
           <option value="">未玩</option>
-          ${PLAYERS.map(p => `<option value="${p}">${p}</option>`).join('')}
+          ${PLAYERS.map(p => `<option>${p}</option>`).join('')}
         </select>
       `;
-      matchFields.appendChild(div);
+      document.getElementById('match-fields').appendChild(div);
     });
 
-    function getStoredSessions() {
-      const stored = localStorage.getItem('smash_sessions');
-      return stored ? JSON.parse(stored) : [];
+    document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
+
+    function setMsg(msg, isError = false) {
+      const el = document.getElementById('form-msg');
+      el.textContent = msg;
+      el.style.color = isError ? '#ff4d4d' : '#4dff91';
     }
 
-    function saveStoredSessions(data) {
-      localStorage.setItem('smash_sessions', JSON.stringify(data));
-    }
-
-    document.getElementById('add-form').addEventListener('submit', function(e) {
+    document.getElementById('add-form').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const btn = document.getElementById('submit-btn');
       const date = document.getElementById('date-input').value;
-      if (!date) return;
-
-      const existing = getStoredSessions();
-      if (existing.find(s => s.date === date)) {
-        alert('這個日期已經有紀錄了！');
-        return;
-      }
 
       const results = {};
       Object.keys(MATCH_TYPES).forEach(key => {
         results[key] = document.getElementById(`sel-${key}`).value || null;
       });
 
-      const hasAnyResult = Object.values(results).some(v => v !== null);
-      if (!hasAnyResult) {
-        alert('至少要有一個賽制的結果！');
+      if (!Object.values(results).some(v => v)) {
+        setMsg('至少要有一個賽制的結果！', true);
         return;
       }
 
-      existing.push({ date, results });
-      existing.sort((a, b) => a.date.localeCompare(b.date));
-      saveStoredSessions(existing);
+      btn.disabled = true;
+      btn.textContent = '新增中...';
+      setMsg('');
 
-      this.reset();
-      document.getElementById('date-input').value = today;
-      renderAdminList();
-      alert('新增成功！');
+      try {
+        const { sha, data } = await readFile();
+        if (data.sessions.find(s => s.date === date)) {
+          setMsg('這個日期已經有紀錄了！', true);
+          return;
+        }
+        data.sessions.push({ date, results });
+        data.sessions.sort((a, b) => a.date.localeCompare(b.date));
+        await writeFile(data, sha);
+        this.reset();
+        document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
+        setMsg('✓ 新增成功！');
+        renderAdminList();
+      } catch (err) {
+        setMsg(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '新增場次';
+      }
     });
 
-    function deleteSession(date) {
+    async function deleteSession(date) {
       if (!confirm(`確定要刪除 ${date} 的紀錄嗎？`)) return;
-      const data = getStoredSessions().filter(s => s.date !== date);
-      saveStoredSessions(data);
-      renderAdminList();
-    }
-
-    function renderAdminList() {
-      const data = [...getStoredSessions()].reverse();
-      const container = document.getElementById('admin-list');
-      if (data.length === 0) {
-        container.innerHTML = '<p class="empty">還沒有紀錄</p>';
-        return;
+      try {
+        const { sha, data } = await readFile();
+        data.sessions = data.sessions.filter(s => s.date !== date);
+        await writeFile(data, sha);
+        renderAdminList();
+      } catch (err) {
+        alert(err.message);
       }
-      container.innerHTML = data.map(s => {
-        const results = Object.entries(MATCH_TYPES)
-          .filter(([key]) => s.results[key])
-          .map(([key, label]) => `<span class="tag">${label}: ${s.results[key]}</span>`)
-          .join('');
-        return `
-          <div class="admin-row">
-            <div class="admin-row-info">
-              <span class="session-date">📅 ${s.date}</span>
-              <div class="admin-tags">${results || '<span class="no-result">無結果</span>'}</div>
-            </div>
-            <button class="btn-delete" onclick="deleteSession('${s.date}')">刪除</button>
-          </div>
-        `;
-      }).join('');
     }
 
+    async function renderAdminList() {
+      const container = document.getElementById('admin-list');
+      container.innerHTML = '<p class="empty">載入中...</p>';
+      try {
+        const { data } = await readFile();
+        const sessions = [...data.sessions].reverse();
+        if (sessions.length === 0) {
+          container.innerHTML = '<p class="empty">還沒有紀錄</p>';
+          return;
+        }
+        container.innerHTML = sessions.map(s => {
+          const tags = Object.entries(MATCH_TYPES)
+            .filter(([key]) => s.results[key])
+            .map(([key, label]) => `<span class="tag">${label}: ${s.results[key]}</span>`)
+            .join('');
+          return `
+            <div class="admin-row">
+              <div class="admin-row-info">
+                <span class="session-date">📅 ${s.date}</span>
+                <div class="admin-tags">${tags}</div>
+              </div>
+              <button class="btn-delete" onclick="deleteSession('${s.date}')">刪除</button>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = `<p class="empty">${err.message}</p>`;
+      }
+    }
+
+    renderPATStatus();
     renderAdminList();
   </script>
 </body>

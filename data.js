@@ -7,18 +7,3 @@ const MATCH_TYPES = {
   random:    "問號賽",
   sword:     "劍士賽"
 };
-
-// 新增場次：複製下面這個格式，填入日期和各賽制冠軍名字
-// 沒玩的賽制填 null
-const sessions = [
-  // {
-  //   date: "2026-04-30",
-  //   results: {
-  //     character: "Java",
-  //     team:      "Sky",
-  //     solo:      "Benny",
-  //     random:    "Java",
-  //     sword:     null
-  //   }
-  // }
-];

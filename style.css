@@ -326,6 +326,72 @@ td.total {
   background: #ff4d4d22;
 }
 
+.pat-hint {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.pat-hint code {
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.82rem;
+  color: #aaa;
+}
+
+.pat-set {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #4dff91;
+  font-size: 0.9rem;
+}
+
+.form-group input[type="password"] {
+  flex: 1;
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  max-width: 280px;
+}
+
+.btn-sm {
+  background: transparent;
+  border: 1px solid #444;
+  color: #aaa;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-sm:hover { border-color: #888; color: #fff; }
+
+.btn-save {
+  border-color: #ff4d4d55;
+  color: #ff4d4d;
+}
+
+.btn-save:hover { background: #ff4d4d22; }
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.form-msg {
+  font-size: 0.9rem;
+}
+
 footer {
   text-align: center;
   padding: 30px;

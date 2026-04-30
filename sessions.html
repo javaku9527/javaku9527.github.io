@@ -21,7 +21,7 @@
   <main>
     <section class="sessions-section">
       <h2>所有場次</h2>
-      <div id="sessions-list"></div>
+      <div id="sessions-list"><p class="empty">載入中...</p></div>
     </section>
   </main>
 
@@ -31,20 +31,32 @@
 
   <script src="data.js"></script>
   <script>
-    function getStoredSessions() {
-      const stored = localStorage.getItem('smash_sessions');
-      return stored ? JSON.parse(stored) : [];
+    const GITHUB_API = 'https://api.github.com/repos/javaku9527/javaku9527.github.io/contents/data.json';
+
+    function fromBase64(b64) {
+      const binary = atob(b64.replace(/\s/g, ''));
+      const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
     }
 
-    const data = getStoredSessions();
-    const container = document.getElementById("sessions-list");
+    async function readData() {
+      const res = await fetch(GITHUB_API);
+      if (!res.ok) throw new Error(`載入失敗 (${res.status})`);
+      const file = await res.json();
+      return JSON.parse(fromBase64(file.content));
+    }
 
-    if (data.length === 0) {
-      container.innerHTML = '<p class="empty">還沒有場次紀錄，快去打一場！</p>';
-    } else {
-      const sorted = [...data].reverse();
+    const container = document.getElementById('sessions-list');
+
+    readData().then(data => {
+      const sessions = data.sessions || [];
+      if (sessions.length === 0) {
+        container.innerHTML = '<p class="empty">還沒有場次紀錄，快去打一場！</p>';
+        return;
+      }
+      const sorted = [...sessions].reverse();
       container.innerHTML = sorted.map((session, i) => {
-        const num = data.length - i;
+        const num = sessions.length - i;
         const results = Object.entries(MATCH_TYPES).map(([key, label]) => {
           const winner = session.results[key];
           if (!winner) return '';
@@ -66,7 +78,9 @@
           </div>
         `;
       }).join('');
-    }
+    }).catch(err => {
+      container.innerHTML = `<p class="empty" style="color:#ff4d4d">${err.message}</p>`;
+    });
   </script>
 </body>
 </html>
