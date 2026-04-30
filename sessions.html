@@ -14,7 +14,6 @@
     <nav>
       <a href="index.html">排行榜</a>
       <a href="sessions.html" class="active">場次紀錄</a>
-      <a href="admin.html">新增紀錄</a>
     </nav>
   </header>
 
@@ -26,7 +25,7 @@
   </main>
 
   <footer>
-    <p>Made with ❤️ and 無數次被打飛</p>
+    <p>Made with <span id="heart">❤️</span> and 無數次被打飛</p>
   </footer>
 
   <script src="data.js"></script>
@@ -80,6 +79,15 @@
       }).join('');
     }).catch(err => {
       container.innerHTML = `<p class="empty" style="color:#ff4d4d">${err.message}</p>`;
+    });
+  </script>
+  <script>
+    let clicks = 0, timer;
+    document.getElementById('heart').addEventListener('click', () => {
+      clicks++;
+      clearTimeout(timer);
+      if (clicks >= 3) { window.location.href = 'admin.html'; return; }
+      timer = setTimeout(() => clicks = 0, 1500);
     });
   </script>
 </body>
