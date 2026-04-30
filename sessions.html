@@ -14,6 +14,7 @@
     <nav>
       <a href="index.html">排行榜</a>
       <a href="sessions.html" class="active">場次紀錄</a>
+      <a href="admin.html">新增紀錄</a>
     </nav>
   </header>
 
@@ -30,14 +31,20 @@
 
   <script src="data.js"></script>
   <script>
+    function getStoredSessions() {
+      const stored = localStorage.getItem('smash_sessions');
+      return stored ? JSON.parse(stored) : [];
+    }
+
+    const data = getStoredSessions();
     const container = document.getElementById("sessions-list");
 
-    if (sessions.length === 0) {
+    if (data.length === 0) {
       container.innerHTML = '<p class="empty">還沒有場次紀錄，快去打一場！</p>';
     } else {
-      const sorted = [...sessions].reverse();
+      const sorted = [...data].reverse();
       container.innerHTML = sorted.map((session, i) => {
-        const num = sessions.length - i;
+        const num = data.length - i;
         const results = Object.entries(MATCH_TYPES).map(([key, label]) => {
           const winner = session.results[key];
           if (!winner) return '';

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新增紀錄 - 大亂鬥</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>⚔️ 大亂鬥戰績紀錄</h1>
+    <p>記錄每一場對戰的榮耀與恥辱</p>
+    <nav>
+      <a href="index.html">排行榜</a>
+      <a href="sessions.html">場次紀錄</a>
+      <a href="admin.html" class="active">新增紀錄</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="admin-section">
+      <h2>新增場次</h2>
+      <form id="add-form">
+        <div class="form-group">
+          <label>日期</label>
+          <input type="date" id="date-input" required>
+        </div>
+        <div id="match-fields"></div>
+        <button type="submit" class="btn-primary">新增場次</button>
+      </form>
+    </section>
+
+    <section class="sessions-section">
+      <h2>已紀錄場次</h2>
+      <div id="admin-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Made with ❤️ and 無數次被打飛</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date-input').value = today;
+
+    // Generate match type selects from data.js
+    const matchFields = document.getElementById('match-fields');
+    Object.entries(MATCH_TYPES).forEach(([key, label]) => {
+      const div = document.createElement('div');
+      div.className = 'form-group';
+      div.innerHTML = `
+        <label>${label}冠軍</label>
+        <select id="sel-${key}">
+          <option value="">未玩</option>
+          ${PLAYERS.map(p => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+      `;
+      matchFields.appendChild(div);
+    });
+
+    function getStoredSessions() {
+      const stored = localStorage.getItem('smash_sessions');
+      return stored ? JSON.parse(stored) : [];
+    }
+
+    function saveStoredSessions(data) {
+      localStorage.setItem('smash_sessions', JSON.stringify(data));
+    }
+
+    document.getElementById('add-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const date = document.getElementById('date-input').value;
+      if (!date) return;
+
+      const existing = getStoredSessions();
+      if (existing.find(s => s.date === date)) {
+        alert('這個日期已經有紀錄了！');
+        return;
+      }
+
+      const results = {};
+      Object.keys(MATCH_TYPES).forEach(key => {
+        results[key] = document.getElementById(`sel-${key}`).value || null;
+      });
+
+      const hasAnyResult = Object.values(results).some(v => v !== null);
+      if (!hasAnyResult) {
+        alert('至少要有一個賽制的結果！');
+        return;
+      }
+
+      existing.push({ date, results });
+      existing.sort((a, b) => a.date.localeCompare(b.date));
+      saveStoredSessions(existing);
+
+      this.reset();
+      document.getElementById('date-input').value = today;
+      renderAdminList();
+      alert('新增成功！');
+    });
+
+    function deleteSession(date) {
+      if (!confirm(`確定要刪除 ${date} 的紀錄嗎？`)) return;
+      const data = getStoredSessions().filter(s => s.date !== date);
+      saveStoredSessions(data);
+      renderAdminList();
+    }
+
+    function renderAdminList() {
+      const data = [...getStoredSessions()].reverse();
+      const container = document.getElementById('admin-list');
+      if (data.length === 0) {
+        container.innerHTML = '<p class="empty">還沒有紀錄</p>';
+        return;
+      }
+      container.innerHTML = data.map(s => {
+        const results = Object.entries(MATCH_TYPES)
+          .filter(([key]) => s.results[key])
+          .map(([key, label]) => `<span class="tag">${label}: ${s.results[key]}</span>`)
+          .join('');
+        return `
+          <div class="admin-row">
+            <div class="admin-row-info">
+              <span class="session-date">📅 ${s.date}</span>
+              <div class="admin-tags">${results || '<span class="no-result">無結果</span>'}</div>
+            </div>
+            <button class="btn-delete" onclick="deleteSession('${s.date}')">刪除</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderAdminList();
+  </script>
+</body>
+</html>

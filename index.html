@@ -14,6 +14,7 @@
     <nav>
       <a href="index.html" class="active">排行榜</a>
       <a href="sessions.html">場次紀錄</a>
+      <a href="admin.html">新增紀錄</a>
     </nav>
   </header>
 
@@ -47,12 +48,17 @@
 
   <script src="data.js"></script>
   <script>
-    function computeStats() {
+    function getStoredSessions() {
+      const stored = localStorage.getItem('smash_sessions');
+      return stored ? JSON.parse(stored) : [];
+    }
+
+    function computeStats(data) {
       const stats = {};
       PLAYERS.forEach(p => {
         stats[p] = { character: 0, team: 0, solo: 0, random: 0, sword: 0, total: 0 };
       });
-      sessions.forEach(s => {
+      data.forEach(s => {
         Object.entries(s.results).forEach(([type, winner]) => {
           if (winner && stats[winner]) {
             stats[winner][type]++;
@@ -71,12 +77,13 @@
       return champ;
     }
 
-    const stats = computeStats();
+    const data = getStoredSessions();
+    const stats = computeStats(data);
     const champ = findChampion(stats);
 
     document.getElementById("summary").innerHTML = `
       <div class="stat-card">
-        <span class="stat-number">${sessions.length}</span>
+        <span class="stat-number">${data.length}</span>
         <span class="stat-label">總場次</span>
       </div>
       <div class="stat-card">
