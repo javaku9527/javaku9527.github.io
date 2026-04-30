@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大亂鬥戰績紀錄</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>⚔️ 大亂鬥戰績紀錄</h1>
+    <p>記錄每一場對戰的榮耀與恥辱</p>
+    <nav>
+      <a href="index.html" class="active">排行榜</a>
+      <a href="sessions.html">場次紀錄</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="stats" id="summary"></section>
+
+    <section class="leaderboard">
+      <h2>戰績總覽</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>玩家</th>
+              <th>角色賽</th>
+              <th>團體賽</th>
+              <th>單挑賽</th>
+              <th>問號賽</th>
+              <th>劍士賽</th>
+              <th>總計</th>
+            </tr>
+          </thead>
+          <tbody id="stats-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Made with ❤️ and 無數次被打飛</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    function computeStats() {
+      const stats = {};
+      PLAYERS.forEach(p => {
+        stats[p] = { character: 0, team: 0, solo: 0, random: 0, sword: 0, total: 0 };
+      });
+      sessions.forEach(s => {
+        Object.entries(s.results).forEach(([type, winner]) => {
+          if (winner && stats[winner]) {
+            stats[winner][type]++;
+            stats[winner].total++;
+          }
+        });
+      });
+      return stats;
+    }
+
+    function findChampion(stats) {
+      let max = 0, champ = "-";
+      PLAYERS.forEach(p => {
+        if (stats[p].total > max) { max = stats[p].total; champ = p; }
+      });
+      return champ;
+    }
+
+    const stats = computeStats();
+    const champ = findChampion(stats);
+
+    document.getElementById("summary").innerHTML = `
+      <div class="stat-card">
+        <span class="stat-number">${sessions.length}</span>
+        <span class="stat-label">總場次</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">${PLAYERS.length}</span>
+        <span class="stat-label">玩家人數</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">${champ}</span>
+        <span class="stat-label">當前霸主</span>
+      </div>
+    `;
+
+    const sorted = [...PLAYERS].sort((a, b) => stats[b].total - stats[a].total);
+    document.getElementById("stats-body").innerHTML = sorted.map((player, i) => {
+      const s = stats[player];
+      return `
+        <tr class="${i === 0 && s.total > 0 ? 'top' : ''}">
+          <td class="player-cell">${i === 0 && s.total > 0 ? '👑 ' : ''}${player}</td>
+          <td>${s.character}</td>
+          <td>${s.team}</td>
+          <td>${s.solo}</td>
+          <td>${s.random}</td>
+          <td>${s.sword}</td>
+          <td class="total">${s.total}</td>
+        </tr>
+      `;
+    }).join('');
+  </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>場次紀錄 - 大亂鬥</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>⚔️ 大亂鬥戰績紀錄</h1>
+    <p>記錄每一場對戰的榮耀與恥辱</p>
+    <nav>
+      <a href="index.html">排行榜</a>
+      <a href="sessions.html" class="active">場次紀錄</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="sessions-section">
+      <h2>所有場次</h2>
+      <div id="sessions-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Made with ❤️ and 無數次被打飛</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    const container = document.getElementById("sessions-list");
+
+    if (sessions.length === 0) {
+      container.innerHTML = '<p class="empty">還沒有場次紀錄，快去打一場！</p>';
+    } else {
+      const sorted = [...sessions].reverse();
+      container.innerHTML = sorted.map((session, i) => {
+        const num = sessions.length - i;
+        const results = Object.entries(MATCH_TYPES).map(([key, label]) => {
+          const winner = session.results[key];
+          if (!winner) return '';
+          return `
+            <div class="result-item">
+              <span class="match-type">${label}</span>
+              <span class="winner">🏆 ${winner}</span>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="session-card">
+            <div class="session-header">
+              <span class="session-date">📅 ${session.date}</span>
+              <span class="session-num">第 ${num} 次</span>
+            </div>
+            <div class="session-results">${results}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

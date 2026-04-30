@@ -1,0 +1,219 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f0f1a;
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+header {
+  text-align: center;
+  padding: 50px 20px 0;
+  background: linear-gradient(180deg, #1a0a2e 0%, #0f0f1a 100%);
+  border-bottom: 2px solid #ff4d4d;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  color: #ff4d4d;
+  text-shadow: 0 0 20px rgba(255, 77, 77, 0.5);
+  margin-bottom: 8px;
+}
+
+header p {
+  color: #888;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+}
+
+nav a {
+  padding: 10px 32px;
+  color: #666;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+nav a:hover {
+  color: #ccc;
+}
+
+nav a.active {
+  color: #ff4d4d;
+  border-bottom-color: #ff4d4d;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* --- Summary cards --- */
+.stats {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 12px;
+  padding: 28px 36px;
+  text-align: center;
+  flex: 1;
+  min-width: 140px;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #ff4d4d;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 6px;
+}
+
+/* --- Section headings --- */
+.leaderboard h2,
+.sessions-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ccc;
+  border-left: 4px solid #ff4d4d;
+  padding-left: 12px;
+  margin-bottom: 20px;
+}
+
+/* --- Stats table --- */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #13131f;
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 12px 16px;
+  text-align: center;
+  border-bottom: 1px solid #2a2a3e;
+  white-space: nowrap;
+}
+
+th:first-child { text-align: left; }
+
+td {
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 1rem;
+}
+
+td:first-child { text-align: left; }
+
+tr:hover td { background: #16162a; }
+
+tr.top td { color: #ffd700; }
+
+.player-cell { font-weight: 600; }
+
+td.total {
+  font-weight: bold;
+  color: #ff4d4d;
+}
+
+/* --- Session cards --- */
+.session-card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #2a2a3e;
+}
+
+.session-date {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.session-num {
+  color: #ff4d4d;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.session-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.match-type {
+  font-size: 0.75rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.winner {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* --- Empty state --- */
+.empty {
+  color: #444;
+  text-align: center;
+  padding: 50px;
+  border: 1px dashed #2a2a3e;
+  border-radius: 12px;
+}
+
+footer {
+  text-align: center;
+  padding: 30px;
+  color: #333;
+  font-size: 0.82rem;
+  margin-top: 40px;
+}
